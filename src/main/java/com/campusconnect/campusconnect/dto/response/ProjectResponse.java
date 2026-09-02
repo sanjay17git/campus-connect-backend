@@ -24,4 +24,7 @@ public class ProjectResponse {
     private String ownerEmail;
     private LocalDateTime createdAt;
     private int maxTeamSize;
+    private int totalTasks;
+    private int completedTasks;
+    private int completionPercentage;
 }

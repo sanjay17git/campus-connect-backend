@@ -6,9 +6,11 @@ import com.campusconnect.campusconnect.dto.response.ApiResponse;
 import com.campusconnect.campusconnect.dto.response.ProjectResponse;
 import com.campusconnect.campusconnect.model.Like;
 import com.campusconnect.campusconnect.model.Project;
+import com.campusconnect.campusconnect.model.Task;
 import com.campusconnect.campusconnect.model.User;
 import com.campusconnect.campusconnect.repository.LikeRepository;
 import com.campusconnect.campusconnect.repository.ProjectRepository;
+import com.campusconnect.campusconnect.repository.TaskRepository;
 import com.campusconnect.campusconnect.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +21,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class ProjectService {
+
+    @Autowired
+    private TaskRepository taskRepository;
 
     @Autowired
     private ProjectRepository projectRepository;
@@ -48,6 +53,16 @@ public class ProjectService {
     }
 
     private ProjectResponse toResponse(Project project) {
+        // Get task counts
+        List<Task> allTasks = taskRepository
+                .findByProject(project);
+        int totalTasks = allTasks.size();
+        int completedTasks = (int) allTasks.stream()
+                .filter(t -> t.getStatus() == Task.Status.DONE)
+                .count();
+        int percentage = totalTasks == 0 ? 0 :
+                (completedTasks * 100) / totalTasks;
+
         return ProjectResponse.builder()
                 .id(project.getId())
                 .title(project.getTitle())
@@ -57,8 +72,11 @@ public class ProjectService {
                 .likesCount(project.getLikesCount())
                 .ownerName(project.getOwner().getName())
                 .ownerEmail(project.getOwner().getEmail())
-                .createdAt(project.getCreatedAt())
                 .maxTeamSize(project.getMaxTeamSize())
+                .createdAt(project.getCreatedAt())
+                .totalTasks(totalTasks)
+                .completedTasks(completedTasks)
+                .completionPercentage(percentage)
                 .build();
     }
 
